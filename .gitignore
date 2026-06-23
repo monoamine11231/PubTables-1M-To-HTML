@@ -1,0 +1,10 @@
+PubTables-1M-Structure_Annotations_Train/
+PubTables-1M-Structure_Table_Words/
+PubTables-1M-Structure_Filelists/
+PubTables-1M-Structure_Images_Train/
+test.json
+**/__pycache__
+**/.coverage
+**/.claude
+**/.pytest_cache
+**.venv
