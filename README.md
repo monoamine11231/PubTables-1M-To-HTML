@@ -1,4 +1,4 @@
-<h1 align="center" style="display: block; font-size: 2.5em; font-weight: bold; margin-block-start: 1em; margin-block-end: 1em;">
+<h1 align="center" style="display: block; font-size: 2.5em; font-weight: bold; margin-block-start: 1em; margin-block-end: 1em; border-bottom: 0">
     <strong>PubTables-1M-To-HTML</strong><br/>
     <img align="center" src="https://raw.githubusercontent.com/monoamine11231/PubTables-1M-To-HTML/refs/heads/gh-badges/badge-tests.svg"/>
     <img align="center" src="https://raw.githubusercontent.com/monoamine11231/PubTables-1M-To-HTML/refs/heads/gh-badges/badge-coverage.svg"/>
@@ -10,7 +10,34 @@ This is a Python script used to convert the table XML annotations together with 
 
 If you are looking for the **dataset files**, they can be found [here](https://huggingface.co/datasets/monoamine11231/pubtables-1m-html).
 
-## Conversion & Limitations
+## Installation
+Make sure you have [uv](https://github.com/astral-sh/uv) installed. After that, run `uv sync`.
+
+## Usage
+The Python script has 2 options:
+- Convert the table XML annotations together with the JSON token annotations into HTML table representations.
+- Inspect the produced HTML conversions by creating a HTML document that integrates the original table images with the produced HTML representations.
+
+### Conversion
+To make a conversion of the given annotations to HTML representations, please run:
+```bash
+uv run main.py convert [-h] --xml-dir XML_DIR --json-dir JSON_DIR [--output-dir OUTPUT_DIR]
+```
+
+- `XML_DIR` is the directory containing all the XML table annotations without any folder sub-structures. 
+- `JSON_DIR` is the directory containing all the JSON token annotations without any folder sub-structures.
+
+### Inspection
+To make an inspection of the produced HTML representations by converting the given table annotations, please run:
+```bash
+uv run main.py inspect [-h] --xml-dir XML_DIR --json-dir JSON_DIR [--images-dir IMAGES_DIR] [-n N] [--output OUTPUT]
+```
+
+- `XML_DIR` is the directory containing all the XML table annotations without any folder sub-structures. 
+- `JSON_DIR` is the directory containing all the JSON token annotations without any folder sub-structures.
+- `IMAGES_DIR` is the directory containing all the image files of the original tables without any folder sub-structures.
+
+## Structure
 The HTML table representations have a structural format which includes bound-boxes of table cells and table rows, and marks the explicitely the header (if existant) and body parts of the table, as it can be seen below.
 
 ```html
@@ -49,6 +76,8 @@ The HTML table representations have a structural format which includes bound-box
 	</tbody>
 </table>
 ```
+
+## Limitations
 
 It is important to understand that the Python script has a set of limitations which are listed below:
 1. The script doesn't include any styling data about the table cell and the table cell text, e.g., border, color, text properties such as boldness, etc.
