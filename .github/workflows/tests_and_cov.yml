@@ -1,4 +1,4 @@
-name: Tests
+name: Tests and Coverage
 
 on:
   push:
@@ -24,10 +24,10 @@ jobs:
         run: |
           if uv run pytest --tb=short; then
             echo "result=passing" >> "$GITHUB_OUTPUT"
-            echo "color=brightgreen" >> "$GITHUB_OUTPUT"
+            echo "color=#4c1" >> "$GITHUB_OUTPUT"
           else
             echo "result=failing" >> "$GITHUB_OUTPUT"
-            echo "color=red" >> "$GITHUB_OUTPUT"
+            echo "color=#e05d44" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run coverage
@@ -37,12 +37,15 @@ jobs:
           TOTAL=$(uv run coverage report --format=total)
           echo "percent=${TOTAL}" >> "$GITHUB_OUTPUT"
           if [ "$TOTAL" -ge 90 ]; then
-            echo "color=brightgreen" >> "$GITHUB_OUTPUT"
+            echo "color=#4c1" >> "$GITHUB_OUTPUT"
           elif [ "$TOTAL" -ge 70 ]; then
-            echo "color=yellow" >> "$GITHUB_OUTPUT"
+            echo "color=#dfb317" >> "$GITHUB_OUTPUT"
           else
-            echo "color=red" >> "$GITHUB_OUTPUT"
+            echo "color=#e05d44" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Create badges directory
+        run: mkdir -p badges
 
       - name: Generate test badge
         uses: emibcn/badge-action@v2
@@ -50,7 +53,7 @@ jobs:
           label: tests
           status: ${{ steps.tests.outputs.result }}
           color: ${{ steps.tests.outputs.color }}
-          path: badge-tests.svg
+          path: badges/badge-tests.svg
 
       - name: Generate coverage badge
         uses: emibcn/badge-action@v2
@@ -58,7 +61,7 @@ jobs:
           label: coverage
           status: "${{ steps.coverage.outputs.percent }}%"
           color: ${{ steps.coverage.outputs.color }}
-          path: badge-coverage.svg
+          path: badges/badge-coverage.svg
 
       - name: Push badges to gh-badges branch
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -66,6 +69,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-badges
-          publish_dir: .
-          keep_files: true
-          include_files: "badge-tests.svg\nbadge-coverage.svg"
+          publish_dir: ./badges
+          keep_files: false
