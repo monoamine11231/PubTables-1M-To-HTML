@@ -52,7 +52,7 @@ jobs:
         with:
           label: tests
           status: ${{ steps.tests.outputs.result }}
-          color: ${{ steps.tests.outputs.color }}
+          color: "${{ steps.tests.outputs.color }}"
           path: badges/badge-tests.svg
 
       - name: Generate coverage badge
@@ -60,7 +60,7 @@ jobs:
         with:
           label: coverage
           status: "${{ steps.coverage.outputs.percent }}%"
-          color: ${{ steps.coverage.outputs.color }}
+          color: "${{ steps.coverage.outputs.color }}"
           path: badges/badge-coverage.svg
 
       - name: Push badges to gh-badges branch
