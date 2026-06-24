@@ -47,8 +47,10 @@ class TableCell:
     def append_token(self, token: Token):
         self._tokens.append(token)
 
-    def finalize(self):
+    def extend_tokens(self, tokens: list[Token]):
+        self._tokens.extend(tokens)
 
+    def finalize(self):
         self._tokens.sort(key=lambda x: x["span_num"])
         self._text = " ".join([x["text"] for x in self._tokens])
 
@@ -75,6 +77,10 @@ class TableCell:
     @property
     def bbox(self) -> Bbox:
         return self._bbox
+
+    @property
+    def tokens(self) -> list[Token]:
+        return self._tokens
 
     def __repr__(self) -> str:
         return f"TableCell({self._colspan=}, {self._rowspan=}, {self._text=}, {self._bbox=})"
@@ -141,6 +147,23 @@ def extract_token_annotations(
             )
         return (x0, y0, x1, y1)
 
+    def write2cells(
+        cells: DefaultDict[int, dict[int, TableCell]],
+        rowspan: tuple[int, ...],
+        colspan: tuple[int, ...],
+        element: TableCell,
+        overwrite: bool = False,
+    ) -> TableCell | None:
+        for r in rowspan:
+            for c in colspan:
+                if cells[r].get(c, None):
+                    if cells[r][c] != element and not overwrite:
+                        # Overlap
+                        return cells[r][c]
+                cells[r][c] = element
+
+        return None
+
     rtree_rows_index = index.Index()
     for i, bbox in enumerate(rows_bbox):
         rtree_rows_index.insert(i, tuple(bbox))
@@ -193,9 +216,19 @@ def extract_token_annotations(
         if (cell.rowspan_indices != rowspan) or (cell.colspan_indices != colspan):
             cell.expand_span(colspan, rowspan)
 
-        for r in cell.rowspan_indices:
-            for c in cell.colspan_indices:
-                cells[r][c] = cell
+        while overlapped := write2cells(
+            cells, cell.rowspan_indices, cell.colspan_indices, cell
+        ):
+            # Edge case of an overlap
+            cell.expand_span(overlapped.colspan_indices, overlapped.rowspan_indices)
+            cell.extend_tokens(overlapped.tokens)
+            write2cells(
+                cells,
+                overlapped.rowspan_indices,
+                overlapped.colspan_indices,
+                cell,
+                overwrite=True,
+            )
 
         cell.append_token(token)
 

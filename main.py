@@ -9,7 +9,7 @@ from extract import extract_table_data, convert2html
 
 
 def find_matching_samples(
-    xml_dir: Path, json_dir: Path, images_dir: Path | None, n: int
+    xml_dir: Path, json_dir: Path, images_dir: Path | None, n: int | None
 ) -> list[str]:
     xmls = {p.stem for p in xml_dir.glob("*.xml")}
     jsons = {p.stem.removesuffix("_words") for p in json_dir.glob("*_words.json")}
@@ -20,6 +20,8 @@ def find_matching_samples(
         common &= images
 
     common = sorted(common)
+    if n is None:
+        return common
     random.seed(42)
     return random.sample(common, min(n, len(common)))
 
@@ -175,7 +177,7 @@ def main():
         "--images-dir", help="Directory containing table images (optional)"
     )
     inspect_parser.add_argument(
-        "-n", type=int, default=100, help="Number of samples to inspect (default: 100)"
+        "-n", type=int, default=None, help="Number of samples to inspect (default: all)"
     )
     inspect_parser.add_argument(
         "--output",

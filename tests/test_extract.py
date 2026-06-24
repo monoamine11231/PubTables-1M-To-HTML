@@ -7,6 +7,7 @@ import pytest
 from extract import (
     Bbox,
     TableCell,
+    Token,
     extract_structure_annotations,
     extract_token_annotations,
     find_or_raise,
@@ -609,6 +610,49 @@ class TestExtractTokenAnnotations:
 
         with pytest.raises(ValueError, match="no existing intersection"):
             extract_token_annotations(json_path, rows_bbox, cols_bbox)
+
+
+class TestTableCellExtendTokensAndTokensProperty:
+    def test_extend_tokens(self) -> None:
+        cell = TableCell(colspan=(0,), rowspan=(0,), bbox=(0, 0, 20, 10))
+        cell.append_token({"text": "a", "bbox": (0, 0, 10, 10), "span_num": 0})
+        extra: list[Token] = [
+            {"text": "b", "bbox": (10, 0, 15, 10), "span_num": 1},
+            {"text": "c", "bbox": (15, 0, 20, 10), "span_num": 2},
+        ]
+        cell.extend_tokens(extra)
+        cell.finalize()
+        assert cell.text == "a b c"
+
+    def test_tokens_property(self) -> None:
+        cell = TableCell(colspan=(0,), rowspan=(0,), bbox=(0, 0, 10, 10))
+        t: Token = {"text": "x", "bbox": (0, 0, 10, 10), "span_num": 0}
+        cell.append_token(t)
+        assert cell.tokens == [t]
+
+
+class TestExtractTokenAnnotationsOverlap:
+    def test_overlap_merges_cells(self, tmp_path: Path) -> None:
+        """When a spanning token covers positions already owned by separate cells,
+        the overlap logic merges them into one cell."""
+        rows_bbox: list[Bbox] = [(0.0, 0.0, 100.0, 20.0)]
+        cols_bbox: list[Bbox] = [
+            (0.0, 0.0, 50.0, 20.0),
+            (50.0, 0.0, 100.0, 20.0),
+        ]
+        tokens: list[dict[str, Any]] = [
+            {"text": "left", "bbox": [5, 5, 40, 15], "span_num": 0},
+            {"text": "right", "bbox": [55, 5, 90, 15], "span_num": 1},
+            {"text": "span", "bbox": [5, 5, 90, 15], "span_num": 2},
+        ]
+        json_path = _make_words_json(tmp_path, tokens)
+
+        cells = extract_token_annotations(json_path, rows_bbox, cols_bbox)
+        cell = cells[0][0]
+        assert cell.colspan == 2
+        assert cell.rowspan == 1
+        assert cells[0][1] is cell
+        assert cell.text == "left right span"
 
 
 class TestExtractTableData:
