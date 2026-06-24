@@ -1,0 +1,71 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - run: uv sync
+
+      - name: Run tests
+        id: tests
+        run: |
+          if uv run pytest --tb=short; then
+            echo "result=passing" >> "$GITHUB_OUTPUT"
+            echo "color=brightgreen" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=failing" >> "$GITHUB_OUTPUT"
+            echo "color=red" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run coverage
+        id: coverage
+        run: |
+          uv run coverage run -m pytest
+          TOTAL=$(uv run coverage report --format=total)
+          echo "percent=${TOTAL}" >> "$GITHUB_OUTPUT"
+          if [ "$TOTAL" -ge 90 ]; then
+            echo "color=brightgreen" >> "$GITHUB_OUTPUT"
+          elif [ "$TOTAL" -ge 70 ]; then
+            echo "color=yellow" >> "$GITHUB_OUTPUT"
+          else
+            echo "color=red" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate test badge
+        uses: emibcn/badge-action@v2
+        with:
+          label: tests
+          status: ${{ steps.tests.outputs.result }}
+          color: ${{ steps.tests.outputs.color }}
+          path: badge-tests.svg
+
+      - name: Generate coverage badge
+        uses: emibcn/badge-action@v2
+        with:
+          label: coverage
+          status: "${{ steps.coverage.outputs.percent }}%"
+          color: ${{ steps.coverage.outputs.color }}
+          path: badge-coverage.svg
+
+      - name: Push badges to gh-badges branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-badges
+          publish_dir: .
+          keep_files: true
+          include_files: "badge-tests.svg\nbadge-coverage.svg"
