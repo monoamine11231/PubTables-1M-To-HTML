@@ -24,10 +24,10 @@ jobs:
         run: |
           if uv run pytest --tb=short; then
             echo "result=passing" >> "$GITHUB_OUTPUT"
-            echo "color=#4c1" >> "$GITHUB_OUTPUT"
+            echo "color=4c1" >> "$GITHUB_OUTPUT"
           else
             echo "result=failing" >> "$GITHUB_OUTPUT"
-            echo "color=#e05d44" >> "$GITHUB_OUTPUT"
+            echo "color=e05d44" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run coverage
@@ -37,11 +37,11 @@ jobs:
           TOTAL=$(uv run coverage report --format=total)
           echo "percent=${TOTAL}" >> "$GITHUB_OUTPUT"
           if [ "$TOTAL" -ge 90 ]; then
-            echo "color=#4c1" >> "$GITHUB_OUTPUT"
+            echo "color=4c1" >> "$GITHUB_OUTPUT"
           elif [ "$TOTAL" -ge 70 ]; then
-            echo "color=#dfb317" >> "$GITHUB_OUTPUT"
+            echo "color=dfb317" >> "$GITHUB_OUTPUT"
           else
-            echo "color=#e05d44" >> "$GITHUB_OUTPUT"
+            echo "color=e05d44" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create badges directory
